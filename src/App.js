@@ -20,34 +20,34 @@ function App() {
   const [invalidInput, setInvalidInput] = useState(false);
 
   const fetchPokemon = name => {
-    axios
-      .get(`https://pokeapi.co/api/v2/pokemon/${name}`)
-      .then(response => {
-        const stats = response.data.stats;
-        setPokemon({
-          name: response.data.name,
-          hp: stats[5].base_stat,
-          attack: stats[4].base_stat,
-          defense: stats[3].base_stat
-        });
-
-        return response;
-      })
-      .then(response => {
-        axios.get(response.data.species.url).then(response => {
-          const flavor_text = response.data.flavor_text_entries.find(
-            ({ language, version }) =>
-              language.name === 'en' && version.name === 'blue'
-          ).flavor_text;
-          setDescription(flavor_text);
-        });
-        setImageUrl(`https://img.pokemondb.net/artwork/${name}.jpg`);
-        setInvalidInput(false);
-      })
-      .catch(error => {
-        console.log(error);
-        setInvalidInput(true);
+    fetch(`https://pokeapi.co/api/v2/pokemon/${name}`)
+    .then(response => {
+      return response.json();
+    }).then(data => {
+      // Set name and stats
+      setPokemon({
+        name: data.name,
+        hp: data.stats[5].base_stat,
+        attack: data.stats[4].base_stat,
+        defense: data.stats[3].base_stat
       });
+      // Get description data
+      return fetch(data.species.url);
+    }).then(response => {
+      return response.json();
+    }).then(data => {
+      // Set the description
+      const flavor_text = data.flavor_text_entries.find(
+        ({ language, version }) => language.name === 'en' && version.name === 'blue'
+      ).flavor_text;
+      setDescription(flavor_text);
+      setInvalidInput(false);
+    }).catch(error => {
+      console.log(error);
+      setInvalidInput(true);
+    });
+
+    setImageUrl(`https://img.pokemondb.net/artwork/${name}.jpg`);
   };
 
   return (
