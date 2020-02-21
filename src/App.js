@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Search from './components/search';
-import Card from './components/card';
-import axios from 'axios';
+import PokeCard from './components/pokeCard';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
@@ -19,33 +18,29 @@ function App() {
   const [imageUrl, setImageUrl] = useState('');
   const [invalidInput, setInvalidInput] = useState(false);
 
-  const fetchPokemon = name => {
-    fetch(`https://pokeapi.co/api/v2/pokemon/${name}`)
-    .then(response => {
-      return response.json();
-    }).then(data => {
-      // Set name and stats
+  const fetchPokemon = async (name) => {
+    try {
+      const pokeData = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`).then(response => response.json());
+      const descriptionText = await fetch(pokeData.species.url)
+        .then(response => response.json())
+        .then(data => {
+          const description = data.flavor_text_entries.find(({language, version}) => language.name === 'en' && version.name === 'blue');
+          return description.flavor_text;
+        });
+
       setPokemon({
-        name: data.name,
-        hp: data.stats[5].base_stat,
-        attack: data.stats[4].base_stat,
-        defense: data.stats[3].base_stat
+        hp: pokeData.stats[5].base_stat,
+        name: pokeData.name,
+        attack: pokeData.stats[4].base_stat,
+        defense: pokeData.stats[3].base_stat
       });
-      // Get description data
-      return fetch(data.species.url);
-    }).then(response => {
-      return response.json();
-    }).then(data => {
-      // Set the description
-      const flavor_text = data.flavor_text_entries.find(
-        ({ language, version }) => language.name === 'en' && version.name === 'blue'
-      ).flavor_text;
-      setDescription(flavor_text);
-      setInvalidInput(false);
-    }).catch(error => {
+
+      setDescription(descriptionText);
+      invalidInput && setInvalidInput(false);
+    } catch(error) {
       console.log(error);
       setInvalidInput(true);
-    });
+    }
 
     setImageUrl(`https://img.pokemondb.net/artwork/${name}.jpg`);
   };
@@ -58,7 +53,7 @@ function App() {
             <br />
             <Search changeHandler={fetchPokemon} invalidInput={invalidInput} />
             <br />
-            <Card pokemon={pokemon} img={imageUrl} description={description} />
+            <PokeCard pokemon={pokemon} img={imageUrl} description={description} />
           </div>
         </Col>
       </Row>

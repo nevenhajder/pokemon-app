@@ -5,12 +5,12 @@ import ListGroup from 'react-bootstrap/ListGroup';
 
 function card(props) {
   return (
-    <article className="card__wrapper">
-      <div className="card">
-        <div className="card__front">
+    <article className="pokeCard__wrapper">
+      <div className="pokeCard">
+        <div className="pokeCard__front">
           <Image src={props.img} alt={props.pokemon.name} fluid />
         </div>
-        <Card bg="dark" text="white" className="card__back">
+        <Card bg="dark" text="white" className="pokeCard__back">
           <Card.Header style={{ textTransform: 'capitalize' }}>
             {props.pokemon.name}
           </Card.Header>

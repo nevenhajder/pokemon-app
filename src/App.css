@@ -1,29 +1,30 @@
-.card__wrapper {
+.pokeCard__wrapper {
   width: 320px;
   margin: 0 auto;
-  perspective: 1000px;
+  perspective: 1000;
+  -webkit-perspective: 1000;
 }
-
-.card__wrapper:hover .card {
+ 
+.pokeCard__wrapper:hover .pokeCard {
   transform: rotateY(180deg);
 }
 
-.card,
-.card__front,
-.card__back {
+.pokeCard,
+.pokeCard__front,
+.pokeCard__back {
   width: 320px;
   height: 330px;
 }
 
-.card {
+.pokeCard {
   position: relative;
   transition: 0.6s;
   transform-style: preserve-3d;
 }
 
-.card__front {
-  top: -1px;
-  left: -1px;
+.pokeCard__front {
+  top: 0;
+  left: 0;
   z-index: 2;
   display: flex;
   position: absolute;
@@ -34,7 +35,7 @@
   backface-visibility: hidden;
 }
 
-.card__back {
+.pokeCard__back {
   top: 0;
   left: 0;
   position: absolute;
