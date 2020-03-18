@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useReducer } from 'react';
 import Search from './components/search';
 import PokeCard from './components/pokeCard';
 import Container from 'react-bootstrap/Container';
@@ -6,43 +6,67 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import './App.css';
 
+const pokemonReducer = (state, action) => {
+  if (action.type === 'success') {
+    return {
+      pokemon: {
+        hp: action.pokeData.stats[5].base_stat,
+        name: action.pokeData.name,
+        attack: action.pokeData.stats[4].base_stat,
+        defense: action.pokeData.stats[3].base_stat
+      },
+      descriptionText: action.descriptionText,
+      imageUrl: action.imageUrl,
+      invalidInput: false
+    };
+  } else if (action.type === 'error') {
+    console.log('Error: ', action.error);
+    return {
+      ...state,
+      invalidInput: true
+    };
+  } else {
+    throw new Error('This action type is invalid');
+  }
+};
+
 function App() {
-  const [pokemon, setPokemon] = useState({
-    name: '',
-    hp: '',
-    attack: '',
-    defense: ''
+  const [state, dispatch] = useReducer(pokemonReducer, {
+    pokemon: {
+      name: '',
+      hp: '',
+      attack: '',
+      defense: ''
+    },
+    descriptionText: '',
+    imageUrl: '',
+    invalidInput: false
   });
 
-  const [description, setDescription] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
-  const [invalidInput, setInvalidInput] = useState(false);
-
-  const fetchPokemon = async (name) => {
+  const fetchPokemon = async name => {
     try {
-      const pokeData = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`).then(response => response.json());
+      const pokeData = await fetch(
+        `https://pokeapi.co/api/v2/pokemon/${name}`
+      ).then(response => response.json());
       const descriptionText = await fetch(pokeData.species.url)
         .then(response => response.json())
         .then(data => {
-          const description = data.flavor_text_entries.find(({language, version}) => language.name === 'en' && version.name === 'blue');
+          const description = data.flavor_text_entries.find(
+            ({ language, version }) =>
+              language.name === 'en' && version.name === 'blue'
+          );
           return description.flavor_text;
         });
 
-      setPokemon({
-        hp: pokeData.stats[5].base_stat,
-        name: pokeData.name,
-        attack: pokeData.stats[4].base_stat,
-        defense: pokeData.stats[3].base_stat
+      dispatch({
+        type: 'success',
+        pokeData,
+        descriptionText,
+        imageUrl: `https://img.pokemondb.net/artwork/${name}.jpg`
       });
-
-      setDescription(descriptionText);
-      invalidInput && setInvalidInput(false);
-    } catch(error) {
-      console.log(error);
-      setInvalidInput(true);
+    } catch (error) {
+      dispatch({ type: 'error', error });
     }
-
-    setImageUrl(`https://img.pokemondb.net/artwork/${name}.jpg`);
   };
 
   return (
@@ -51,9 +75,16 @@ function App() {
         <Col md={{ span: 6, offset: 3 }}>
           <div className="App">
             <br />
-            <Search changeHandler={fetchPokemon} invalidInput={invalidInput} />
+            <Search
+              changeHandler={fetchPokemon}
+              invalidInput={state.invalidInput}
+            />
             <br />
-            <PokeCard pokemon={pokemon} img={imageUrl} description={description} />
+            <PokeCard
+              pokemon={state.pokemon}
+              img={state.imageUrl}
+              description={state.descriptionText}
+            />
           </div>
         </Col>
       </Row>

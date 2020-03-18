@@ -4,15 +4,21 @@ import Card from 'react-bootstrap/Card';
 import ListGroup from 'react-bootstrap/ListGroup';
 
 function card(props) {
+  const {
+    img,
+    pokemon,
+    description
+  } = props;
+
   return (
     <article className="pokeCard__wrapper">
       <div className="pokeCard">
         <div className="pokeCard__front">
-          <Image src={props.img} alt={props.pokemon.name} fluid />
+          <Image src={img} alt={pokemon.name} fluid />
         </div>
         <Card bg="dark" text="white" className="pokeCard__back">
           <Card.Header style={{ textTransform: 'capitalize' }}>
-            {props.pokemon.name}
+            {pokemon.name}
           </Card.Header>
           <Card.Body>
             <ListGroup
@@ -21,20 +27,20 @@ function card(props) {
             >
               <ListGroup.Item variant="dark" style={{ flex: 1 }}>
                 HP <br />
-                {props.pokemon.hp}
+                {pokemon.hp}
               </ListGroup.Item>
               <ListGroup.Item variant="dark" style={{ flex: 1 }}>
                 ATK <br />
-                {props.pokemon.attack}
+                {pokemon.attack}
               </ListGroup.Item>
               <ListGroup.Item variant="dark" style={{ flex: 1 }}>
                 DEF <br />
-                {props.pokemon.defense}
+                {pokemon.defense}
               </ListGroup.Item>
             </ListGroup>
             <Card.Text>
               <br />
-              {props.description}
+              {description}
             </Card.Text>
           </Card.Body>
         </Card>
