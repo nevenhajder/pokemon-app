@@ -1,56 +1,44 @@
-import React, { useState, useEffect, useReducer } from 'react';
+import React, { useState, useReducer } from 'react';
 import Search from './components/search';
+import SearchHistory from './components/searchHistory';
 import PokeCard from './components/pokeCard';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
+import PokemonReducer from './reducers/PokemonReducer';
 import './App.css';
 
-const pokemonReducer = (state, action) => {
-  if (action.type === 'success') {
-    return {
-      pokemon: {
-        hp: action.pokeData.stats[5].base_stat,
-        name: action.pokeData.name,
-        attack: action.pokeData.stats[4].base_stat,
-        defense: action.pokeData.stats[3].base_stat
-      },
-      descriptionText: action.descriptionText,
-      imageUrl: action.imageUrl,
-      invalidInput: false
-    };
-  } else if (action.type === 'error') {
-    console.log('Error: ', action.error);
-    return {
-      ...state,
-      invalidInput: true
-    };
-  } else {
-    throw new Error('This action type is invalid');
-  }
-};
+function getSearchHistory() {
+  return JSON.parse(localStorage.getItem('pokemonHistory')) || [];
+}
+
+function setSearchHistory(newHistory = '') {
+  localStorage.setItem('pokemonHistory', JSON.stringify(newHistory));
+}
 
 function App() {
-  const [state, dispatch] = useReducer(pokemonReducer, {
+  const [state, dispatch] = useReducer(PokemonReducer, {
     pokemon: {
       name: '',
       hp: '',
       attack: '',
-      defense: ''
+      defense: '',
     },
-    descriptionText: '',
     imageUrl: '',
-    invalidInput: false
+    invalidInput: false,
+    descriptionText: '',
   });
+  const [searchList, setSearchList] = useState(getSearchHistory);
 
-  const fetchPokemon = async name => {
+  const fetchPokemon = async (name) => {
     try {
       const pokeData = await fetch(
         `https://pokeapi.co/api/v2/pokemon/${name}`
-      ).then(response => response.json());
+      ).then((response) => response.json());
+
       const descriptionText = await fetch(pokeData.species.url)
-        .then(response => response.json())
-        .then(data => {
+        .then((response) => response.json())
+        .then((data) => {
           const description = data.flavor_text_entries.find(
             ({ language, version }) =>
               language.name === 'en' && version.name === 'blue'
@@ -62,8 +50,18 @@ function App() {
         type: 'success',
         pokeData,
         descriptionText,
-        imageUrl: `https://img.pokemondb.net/artwork/${name}.jpg`
+        imageUrl: `https://img.pokemondb.net/artwork/${name}.jpg`,
       });
+
+      const previousSearchHistory = getSearchHistory();
+      const wasSearched = previousSearchHistory.find(searched => searched === pokeData.name) !== undefined;
+
+      if (!wasSearched) {
+        const updateSearchHistory = [pokeData.name, ...getSearchHistory()];
+        setSearchHistory(updateSearchHistory);
+        setSearchList(updateSearchHistory);
+      }
+
     } catch (error) {
       dispatch({ type: 'error', error });
     }
@@ -72,7 +70,11 @@ function App() {
   return (
     <Container>
       <Row>
-        <Col md={{ span: 6, offset: 3 }}>
+        <Col md={{ span: 3 }}>
+          <br />
+          <SearchHistory searchHistoryArray={searchList} clickHandler={fetchPokemon} />
+        </Col>
+        <Col md={{ span: 6 }}>
           <div className="App">
             <br />
             <Search
