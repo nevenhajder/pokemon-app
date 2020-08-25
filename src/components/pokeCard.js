@@ -11,10 +11,10 @@ function card(props) {
   } = props;
 
   return (
-    <article className="pokeCard__wrapper">
+    <article className={`pokeCard__wrapper ${pokemon.name && 'active'}`}>
       <div className="pokeCard">
         <div className="pokeCard__front">
-          <Image src={img} alt={pokemon.name} fluid />
+          <Image src={img || '/images/pokemon-card.png'} alt={pokemon.name} fluid />
         </div>
         <Card bg="dark" text="white" className="pokeCard__back">
           <Card.Header style={{ textTransform: 'capitalize' }}>

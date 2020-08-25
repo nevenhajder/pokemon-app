@@ -1,4 +1,4 @@
-export default function pokemonReducer(state, action) {
+function pokemonReducer(state, action) {
   if (action.type === 'success') {
     const newState = {
       pokemon: {
@@ -8,6 +8,7 @@ export default function pokemonReducer(state, action) {
         defense: action.pokeData.stats[3].base_stat,
       },
       imageUrl: action.imageUrl,
+      isLoading: false,
       invalidInput: false,
       descriptionText: action.descriptionText,
     };
@@ -18,7 +19,15 @@ export default function pokemonReducer(state, action) {
       ...state,
       invalidInput: true
     }
-  } else {
+  } else if (action.type === 'startSearch') {
+    return {
+      ...state,
+      isLoading: true,
+    }
+  }
+  else {
     throw new Error('This action type is invalid');
   }
 };
+
+export default pokemonReducer;

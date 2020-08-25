@@ -5,15 +5,16 @@
   -webkit-perspective: 1000;
 }
  
-.pokeCard__wrapper:hover .pokeCard {
+.pokeCard__wrapper.active:hover .pokeCard {
   transform: rotateY(180deg);
 }
 
 .pokeCard,
 .pokeCard__front,
 .pokeCard__back {
+  /* 0.72148288973384 */
   width: 320px;
-  height: 330px;
+  height: 443px;
 }
 
 .pokeCard {
@@ -33,6 +34,10 @@
   align-items: center;
   justify-content: center;
   backface-visibility: hidden;
+}
+
+.pokeCard__front img {
+  max-height: 100%;
 }
 
 .pokeCard__back {

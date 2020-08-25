@@ -1,4 +1,4 @@
-import React, { useState, useReducer } from 'react';
+import React, { useState, useEffect, useReducer } from 'react';
 import Search from './components/search';
 import SearchHistory from './components/searchHistory';
 import PokeCard from './components/pokeCard';
@@ -8,13 +8,6 @@ import Col from 'react-bootstrap/Col';
 import PokemonReducer from './reducers/PokemonReducer';
 import './App.css';
 
-function getSearchHistory() {
-  return JSON.parse(localStorage.getItem('pokemonHistory')) || [];
-}
-
-function setSearchHistory(newHistory = '') {
-  localStorage.setItem('pokemonHistory', JSON.stringify(newHistory));
-}
 
 function App() {
   const [state, dispatch] = useReducer(PokemonReducer, {
@@ -25,13 +18,23 @@ function App() {
       defense: '',
     },
     imageUrl: '',
+    isLoading: false,
     invalidInput: false,
     descriptionText: '',
   });
-  const [searchList, setSearchList] = useState(getSearchHistory);
 
-  const fetchPokemon = async (name) => {
+  // Get searchHistory from localStorage
+  const [searchHistory, setSearchHistory] = useState(JSON.parse(localStorage.getItem('pokemonHistory')) || []);
+
+  function removeFromHistory(name) {
+    const updatedHistory = searchHistory.filter(existing => name !== existing);
+    setSearchHistory(updatedHistory);
+  }
+
+  const fetchPokemon = async(name) => {
     try {
+      dispatch({ type: 'startSearch', isLoading: true });
+
       const pokeData = await fetch(
         `https://pokeapi.co/api/v2/pokemon/${name}`
       ).then((response) => response.json());
@@ -53,13 +56,10 @@ function App() {
         imageUrl: `https://img.pokemondb.net/artwork/${name}.jpg`,
       });
 
-      const previousSearchHistory = getSearchHistory();
-      const wasSearched = previousSearchHistory.find(searched => searched === pokeData.name) !== undefined;
+      const wasSearched = searchHistory.find(searched => searched === pokeData.name) !== undefined;
 
       if (!wasSearched) {
-        const updateSearchHistory = [pokeData.name, ...getSearchHistory()];
-        setSearchHistory(updateSearchHistory);
-        setSearchList(updateSearchHistory);
+        setSearchHistory([pokeData.name, ...searchHistory]);
       }
 
     } catch (error) {
@@ -67,18 +67,24 @@ function App() {
     }
   };
 
+  // Write to localStorage every time the searchHistory changes
+  useEffect(() => {
+    localStorage.setItem('pokemonHistory', JSON.stringify(searchHistory));
+  }, [searchHistory]);
+
   return (
     <Container>
       <Row>
         <Col md={{ span: 3 }}>
           <br />
-          <SearchHistory searchHistoryArray={searchList} clickHandler={fetchPokemon} />
+          <SearchHistory searchHistoryArray={searchHistory} clickHandler={fetchPokemon} removeHandler={removeFromHistory} />
         </Col>
         <Col md={{ span: 6 }}>
           <div className="App">
             <br />
             <Search
-              changeHandler={fetchPokemon}
+              isLoading={state.isLoading}
+              submitHandler={fetchPokemon}
               invalidInput={state.invalidInput}
             />
             <br />
