@@ -1,11 +1,11 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import Card from './card';
+import PokeCard from './pokeCard';
 
 const mockData = {
   pokemon: {
-    name: 'squirtle',
     hp: '15',
+    name: 'squirtle',
     attack: '13',
     defense: '18'
   },
@@ -15,7 +15,7 @@ const mockData = {
 
 it('should render without crashing', () => {
   render(
-    <Card
+    <PokeCard
       pokemon={mockData.pokemon}
       img={mockData.imgUrl}
       description={mockData.description}
@@ -25,7 +25,7 @@ it('should render without crashing', () => {
 
 it('should render the correct information that has been passed in', () => {
   const { baseElement, getByAltText } = render(
-    <Card
+    <PokeCard
       img={mockData.imgUrl}
       pokemon={mockData.pokemon}
       description={mockData.description}

@@ -1,5 +1,5 @@
 import React, { Fragment, useState } from 'react';
-import { ListGroup, Button, ButtonGroup, Badge } from 'react-bootstrap';
+import { ListGroup } from 'react-bootstrap';
 
 export default function SearchHistory(props) {
   const { searchHistoryArray, removeHandler, clickHandler } = props;
@@ -27,7 +27,7 @@ export default function SearchHistory(props) {
         ))}
       </ListGroup>
       {!searchHistoryArray.length &&
-        <p class="text-muted">Nothing to show yet!</p>
+        <p className="text-muted">Nothing to show yet!</p>
       }
     </Fragment>
   );
