@@ -1,33 +1,60 @@
-function pokemonReducer(state, action) {
-  if (action.type === 'success') {
-    const newState = {
-      pokemon: {
-        hp: action.pokeData.stats[5].base_stat,
-        name: action.pokeData.name,
-        attack: action.pokeData.stats[4].base_stat,
-        defense: action.pokeData.stats[3].base_stat,
-      },
-      imageUrl: action.imageUrl,
-      isLoading: false,
-      invalidInput: false,
-      descriptionText: action.descriptionText,
-    };
-    return newState;
-  } else if (action.type === 'error') {
-    console.error('Error: ', action.error);
-    return {
-      ...state,
-      invalidInput: true
-    }
-  } else if (action.type === 'startSearch') {
-    return {
-      ...state,
-      isLoading: true,
-    }
-  }
-  else {
-    throw new Error('This action type is invalid');
-  }
+/**
+ * Formats the stats data into a single object.
+ * @param {array} statsArray Array of stats from the API response
+ * @returns {object} An object containing all of the stats as key-value pairs
+ */
+function formatPokemonStats(statsArray) {
+  return statsArray.reduce((accumulator, { stat, base_stat }) => {
+    accumulator[stat.name] = base_stat;
+    return accumulator;
+  }, {});
+}
+
+const actionTypes = {
+  error: 'ERROR',
+  success: 'SUCCESS',
+  startSearch: 'START_SEARCH',
 };
 
-export default pokemonReducer;
+function pokemonReducer(state, action) {
+  const { error, success, startSearch } = actionTypes;
+
+  switch (action.type) {
+    case success:
+      const {
+        imageUrl,
+        pokeData: { name, stats },
+        descriptionText,
+      } = action;
+      const { hp, attack, defense } = formatPokemonStats(stats);
+
+      return {
+        pokemon: {
+          hp,
+          name,
+          attack,
+          defense,
+        },
+        imageUrl,
+        isLoading: false,
+        invalidInput: false,
+        descriptionText,
+      };
+    case startSearch:
+      return {
+        ...state,
+        isLoading: true,
+      };
+    case error:
+      console.error(action.error);
+      return {
+        ...state,
+        isLoading: false,
+        invalidInput: true,
+      };
+    default:
+      throw new Error(`${action.type} is not a valid action`);
+  }
+}
+
+export { actionTypes, pokemonReducer as default };

@@ -5,11 +5,29 @@ import PokeCard from './components/pokeCard';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import PokemonReducer from './reducers/PokemonReducer';
+import PokemonReducer, { actionTypes } from './reducers/PokemonReducer';
 import './App.css';
 
+// Custom hook that will write to local storage every time data changes
+function useLocalStorage(key, initialValue) {
+  const [data, setData] = useState(
+    () => JSON.parse(localStorage.getItem(key)) || initialValue
+  );
+
+  useEffect(() => {
+    localStorage.setItem(key, JSON.stringify(data));
+  }, [key, data]);
+
+  return [data, setData];
+}
 
 function App() {
+  const [cache, setCache] = React.useState({});
+  const [searchHistory, setSearchHistory] = useLocalStorage(
+    'pokemonHistory',
+    []
+  );
+
   const [state, dispatch] = useReducer(PokemonReducer, {
     pokemon: {
       name: '',
@@ -23,61 +41,81 @@ function App() {
     descriptionText: '',
   });
 
-  // Get searchHistory from localStorage
-  const [searchHistory, setSearchHistory] = useState(JSON.parse(localStorage.getItem('pokemonHistory')) || []);
-
   function removeFromHistory(name) {
-    const updatedHistory = searchHistory.filter(existing => name !== existing);
+    const updatedHistory = searchHistory.filter(
+      (existing) => name !== existing
+    );
     setSearchHistory(updatedHistory);
   }
 
-  const fetchPokemon = async(name) => {
+  const fetchPokemon = async (name) => {
+    // Check for pokemon in cache
+    if (cache[name]) {
+      return dispatch({
+        type: actionTypes.success,
+        ...cache[name],
+      });
+    }
+
     try {
-      dispatch({ type: 'startSearch', isLoading: true });
+      dispatch({ type: actionTypes.startSearch, isLoading: true });
 
-      const pokeData = await fetch(
+      const pokeResponse = await fetch(
         `https://pokeapi.co/api/v2/pokemon/${name}`
-      ).then((response) => response.json());
+      );
 
-      const descriptionText = await fetch(pokeData.species.url)
-        .then((response) => response.json())
-        .then((data) => {
-          const description = data.flavor_text_entries.find(
-            ({ language, version }) =>
-              language.name === 'en' && version.name === 'blue'
-          );
-          return description.flavor_text;
-        });
+      if (pokeResponse.status === 404) {
+        throw new Error(`Couldn't find the Pokémon "${name}"`);
+      }
 
-      dispatch({
-        type: 'success',
+      const pokeData = await pokeResponse.json();
+
+      const descriptionResponse = await fetch(pokeData.species.url);
+      const descriptionData = await descriptionResponse.json();
+      const descriptionText = descriptionData.flavor_text_entries.find(
+        ({ language, version }) =>
+          language.name === 'en' && version.name === 'blue'
+      ).flavor_text;
+
+      const collectedData = {
         pokeData,
         descriptionText,
         imageUrl: `https://img.pokemondb.net/artwork/${name}.jpg`,
+      };
+
+      dispatch({
+        type: actionTypes.success,
+        ...collectedData,
       });
 
-      const wasSearched = searchHistory.find(searched => searched === pokeData.name) !== undefined;
+      // Store result in cache
+      setCache((prevCache) => ({
+        ...prevCache,
+        [name]: { ...collectedData },
+      }));
 
+      // Add to search history
+      const wasSearched =
+        searchHistory.find((searched) => searched === pokeData.name) !==
+        undefined;
       if (!wasSearched) {
         setSearchHistory([pokeData.name, ...searchHistory]);
       }
-
     } catch (error) {
-      dispatch({ type: 'error', error });
+      dispatch({ type: actionTypes.error, error });
     }
   };
-
-  // Write to localStorage every time the searchHistory changes
-  useEffect(() => {
-    localStorage.setItem('pokemonHistory', JSON.stringify(searchHistory));
-  }, [searchHistory]);
 
   return (
     <Container>
       <Row>
         <Col md={{ span: 3 }}>
           <br />
-          <SearchHistory searchHistoryArray={searchHistory} clickHandler={fetchPokemon} removeHandler={removeFromHistory} />
+          <SearchHistory
+            searchHistoryArray={searchHistory}
+            clickHandler={fetchPokemon}
+            removeHandler={removeFromHistory}
+          />
         </Col>
         <Col md={{ span: 6 }}>
           <div className="App">
