@@ -1,44 +1,35 @@
-import React, { useState, useEffect, useReducer } from 'react';
-import Search from './components/search';
-import SearchHistory from './components/searchHistory';
-import PokeCard from './components/pokeCard';
-import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
-import PokemonReducer, { actionTypes } from './reducers/PokemonReducer';
-import './App.css';
-
-// Custom hook that will write to local storage every time data changes
-function useLocalStorage(key, initialValue) {
-  const [data, setData] = useState(
-    () => JSON.parse(localStorage.getItem(key)) || initialValue
-  );
-
-  useEffect(() => {
-    localStorage.setItem(key, JSON.stringify(data));
-  }, [key, data]);
-
-  return [data, setData];
-}
+import React, { useReducer } from "react";
+import Search from "./components/search";
+import SearchHistory from "./components/searchHistory";
+import PokeCard from "./components/pokeCard";
+import Container from "react-bootstrap/Container";
+import Row from "react-bootstrap/Row";
+import Col from "react-bootstrap/Col";
+import PokemonReducer, { actionTypes } from "./reducers/PokemonReducer";
+import "./App.css";
+import useLocalStorage from "./hooks/useLocalStorage";
 
 function App() {
   const [cache, setCache] = React.useState({});
   const [searchHistory, setSearchHistory] = useLocalStorage(
-    'pokemonHistory',
+    "pokemonHistory",
     []
   );
 
-  const [state, dispatch] = useReducer(PokemonReducer, {
+  const [
+    { pokemon, imageUrl, isLoading, invalidInput, descriptionText },
+    dispatch,
+  ] = useReducer(PokemonReducer, {
     pokemon: {
-      name: '',
-      hp: '',
-      attack: '',
-      defense: '',
+      name: "",
+      hp: "",
+      attack: "",
+      defense: "",
     },
-    imageUrl: '',
+    imageUrl: "",
     isLoading: false,
     invalidInput: false,
-    descriptionText: '',
+    descriptionText: "",
   });
 
   function removeFromHistory(name) {
@@ -48,7 +39,9 @@ function App() {
     setSearchHistory(updatedHistory);
   }
 
-  const fetchPokemon = async (name) => {
+  const fetchPokemon = async (rawName) => {
+    const name = rawName.toLowerCase();
+
     // Check for pokemon in cache
     if (cache[name]) {
       return dispatch({
@@ -74,7 +67,7 @@ function App() {
       const descriptionData = await descriptionResponse.json();
       const descriptionText = descriptionData.flavor_text_entries.find(
         ({ language, version }) =>
-          language.name === 'en' && version.name === 'blue'
+          language.name === "en" && version.name === "blue"
       ).flavor_text;
 
       const collectedData = {
@@ -109,7 +102,7 @@ function App() {
   return (
     <Container>
       <Row>
-        <Col md={{ span: 3 }}>
+        <Col md={{ span: 4 }}>
           <br />
           <SearchHistory
             searchHistoryArray={searchHistory}
@@ -117,19 +110,19 @@ function App() {
             removeHandler={removeFromHistory}
           />
         </Col>
-        <Col md={{ span: 6 }}>
+        <Col md={{ span: 8 }}>
           <div className="App">
             <br />
             <Search
-              isLoading={state.isLoading}
+              isLoading={isLoading}
               submitHandler={fetchPokemon}
-              invalidInput={state.invalidInput}
+              invalidInput={invalidInput}
             />
             <br />
             <PokeCard
-              pokemon={state.pokemon}
-              img={state.imageUrl}
-              description={state.descriptionText}
+              pokemon={pokemon}
+              img={imageUrl}
+              description={descriptionText}
             />
           </div>
         </Col>

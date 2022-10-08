@@ -1,5 +1,5 @@
-import React, { Fragment, useState } from 'react';
-import { ListGroup } from 'react-bootstrap';
+import React, { useState } from "react";
+import { Card, ListGroup } from "react-bootstrap";
 
 function SearchHistory(props) {
   const { searchHistoryArray, removeHandler, clickHandler } = props;
@@ -11,35 +11,37 @@ function SearchHistory(props) {
   };
 
   return (
-    <Fragment>
-      <h1 className="h5">Search History</h1>
-      <ListGroup>
-        {searchHistoryArray?.map((searchItem, index) => (
-          <ListGroup.Item
-            key={index}
-            active={index === activeItem}
-            style={{ cursor: 'pointer' }}
-            onClick={() => searchClickHandler(searchItem, index)}
-          >
-            {searchItem.charAt(0).toUpperCase() + searchItem.slice(1)}
-            <button
-              type="button"
-              variant="danger"
-              className="close float-right"
-              onClick={(evt) => {
-                evt.stopPropagation();
-                removeHandler(searchItem);
-              }}
+    <Card>
+      <Card.Body>
+        <Card.Title>Search History</Card.Title>
+        <ListGroup variant="flush">
+          {searchHistoryArray?.map((searchItem, index) => (
+            <ListGroup.Item
+              key={index}
+              active={index === activeItem}
+              style={{ cursor: "pointer" }}
+              onClick={() => searchClickHandler(searchItem, index)}
             >
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </ListGroup.Item>
-        ))}
-      </ListGroup>
-      {!searchHistoryArray?.length && (
-        <p className="text-muted">Nothing to show yet!</p>
-      )}
-    </Fragment>
+              {searchItem.charAt(0).toUpperCase() + searchItem.slice(1)}
+              <button
+                type="button"
+                variant="danger"
+                className="close float-right"
+                onClick={(evt) => {
+                  evt.stopPropagation();
+                  removeHandler(searchItem);
+                }}
+              >
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </ListGroup.Item>
+          ))}
+        </ListGroup>
+        {!searchHistoryArray?.length && (
+          <p className="text-muted">Nothing to show yet!</p>
+        )}
+      </Card.Body>
+    </Card>
   );
 }
 

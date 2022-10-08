@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
-import Form from 'react-bootstrap/Form';
+import React, { useState } from "react";
+import Form from "react-bootstrap/Form";
 
 function Search(props) {
-  const [pokemonName, setPokemonName] = useState('');
+  const { isLoading, invalidInput, submitHandler: fetchPokemon } = props;
+  const [pokemonName, setPokemonName] = useState("");
 
-  const changeHandler = evt => {
+  const changeHandler = (evt) => {
     setPokemonName(evt.target.value.trim());
-  }
+  };
 
-  const submitHandler = evt => {
+  const submitHandler = (evt) => {
     evt.preventDefault();
-    props.submitHandler(pokemonName);
+    fetchPokemon(pokemonName);
   };
 
   return (
@@ -19,10 +20,10 @@ function Search(props) {
         <Form.Control
           size="lg"
           type="text"
-          disabled={props.isLoading}
+          disabled={isLoading}
           onChange={changeHandler}
           placeholder="Search by Pokemon Name"
-          isInvalid={props.invalidInput}
+          isInvalid={invalidInput}
         />
       </Form.Group>
     </Form>
